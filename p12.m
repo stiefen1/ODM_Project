@@ -100,8 +100,6 @@ for t = 1:1:T
     end
 end
 
-con = [con S(1) == 0 S(T) == 0];
-
 %% define sdpsetting
 ops=sdpsettings('solver','LINPROG');
 sol=solvesdp(con,obj,ops);
@@ -134,7 +132,7 @@ for t = 2:1:T
 end
  
 % Select generator to check
-Gen2check = 4;
+Gen2check = 3;
 
 figure;
 plot(time(2:end), g_der(Gen2check, :), time, R_up(Gen2check)'.*[ones(1, T);-ones(1,T)], '--r');

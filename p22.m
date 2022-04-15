@@ -74,9 +74,24 @@ r=[15.2;16.4;16.1;10.9;14.8;7.6;15.6;5.5;9.2;5.7;1.5;12.4;10.4;4.8;14.3;0.5;6.6;
 % demand
 d=[21.3;21.4;17.8;20.9;15.5;17.6;20.2;23.8;27.7;30.1;35.4;39.4;43.2;47.0;49.3;51.5;52.6;50.3;47.0;43.1;38.8;33.2;28.6;24.3];
 
+% Define vectors to ease matricial computation
+Cu = [G1.startup, G2.startup, G3.startup, G4.startup, G5.startup, G6.startup];
+Cd = [G1.shutdown, G2.shutdown, G3.shutdown, G4.shutdown, G5.shutdown, G6.shutdown];
+Cn = [G1.noload, G2.noload, G3.noload, G4.noload, G5.noload, G6.noload];
+Cg = [G1.cost, G2.cost, G3.cost, G4.cost, G5.cost, G6.cost];
+capacity = [G1.capacity, G2.capacity, G3.capacity, G4.capacity, G5.capacity, G6.capacity];
+Tup = [G1.minup, G2.minup, G3.minup, G4.minup, G5.minup, G6.minup];
+Tdn = [G1.mindown, G2.mindown, G3.mindown, G4.mindown, G5.mindown, G6.mindown];
+x0 = [G1.inital, G2.inital, G3.inital, G4.inital, G5.inital, G6.inital]';
+
 %% Unit commitment
-% Hints: define binary variables (vector) in yalmip: 
-% a = binvar(N,M) with dimension N*M 
+x = binvar(NGen, T); % 1 = Gen up, 0 = Gen down
+assign(x(:, 1), x0); % Set initial state of each generator
+u = binvar(NGen, T); % 1 = Gen turned on, 0 = otherwise
+assign(u(:, 1), zeros(NGen, 1));
+v = binvar(NGen, T); % 1 = Gen turned off, 0 = otherwise
+assign(v(:, 1), zeros(NGen, 1));
+g = sdpvar(NGen, T);
 
 % three elements
 %variables Initial
@@ -85,12 +100,37 @@ con=[];%constraints initial
 obj=0;%objective function initial
 
 % objective function
+obj = sum(Cu*u) + sum(Cd*v) + sum(Cn*x) + sum(Cg*g);
 
 % constraints
-
+for t = 1:1:T
+    % Balance between production and consumption
+    con = [con d(t) == sum(g(:,t)) + r(t)];    
+    
+%     for i = 1:1:NGen
+%         % Capacity constraints
+%         con = [con 0 <= g(i, t) g(i,t) <= capacity(i).*x(i,t)];
+%         
+%         if(t>1)
+%             % Constraint to be consistent in the state of the generator
+%             con = [con x(i,t-1)-x(i,t)+u(i,t) >= 0 x(i,t)-x(i,t-1)+v(i,t)>= 0];
+%             
+%             if(t<T)
+%                 for tau = t+1:1:min(t+Tup(i), T)
+%                     con = [con x(i,t)-x(i,t-1) <= x(i,tau)];
+%                 end
+%                 
+%                 for tau = t+1:1:min(t+Tdn(i), T)
+%                     con = [con x(i,t-1)-x(i,t) <= 1-x(i,tau)];
+%                 end
+%             end
+%         end      
+%     end
+end
 %% define sdpsetting
-ops=sdpsettings('solver','LPSOLVE');
-sol=solvesdp(con,obj,ops);
-solvertime=sol.solvertime;
+ops=sdpsettings('solver','LPSOLVE', 'debug', 1)
+sol=solvesdp(con,obj,ops)
+solvertime=sol.solvertime
 
 % obtain the solutions and objective value
+
