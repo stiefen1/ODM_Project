@@ -8,7 +8,7 @@ clear all; close all; yalmip('clear');clc;
 % like vectors: GenCost=[15; 20; 15; 20; 30; 25];
 
 % number of generators
-NGen= 6;
+NGen= 6; 
 % time duration
 T=24;
 % cost

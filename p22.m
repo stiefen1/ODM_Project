@@ -3,14 +3,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear all; close all; yalmip('clear');clc;
 %% Data
-% The following data is define as a struct for each generator.
-% You could define it in your own way if you want, 
-% like vectors: GenCost=[15; 20; 15; 20; 30; 25];
-
 % number of generators
 NGen= 6;
-% time duration
+% time duration and time vector
 T=24;
+time = [0:1:T-1];
+
 % generation cost
 G1.cost = 15;
 G2.cost = 20;
@@ -86,51 +84,73 @@ x0 = [G1.inital, G2.inital, G3.inital, G4.inital, G5.inital, G6.inital]';
 
 %% Unit commitment
 x = binvar(NGen, T); % 1 = Gen up, 0 = Gen down
-assign(x(:, 1), x0); % Set initial state of each generator
 u = binvar(NGen, T); % 1 = Gen turned on, 0 = otherwise
-assign(u(:, 1), zeros(NGen, 1));
 v = binvar(NGen, T); % 1 = Gen turned off, 0 = otherwise
-assign(v(:, 1), zeros(NGen, 1));
 g = sdpvar(NGen, T);
 
-% three elements
-%variables Initial
-
-con=[];%constraints initial
-obj=0;%objective function initial
+% Initial state constraints
+con = [x(:, 1) == x0 u(:, 1) == zeros(NGen, 1) v(:, 1) == zeros(NGen, 1)];
 
 % objective function
 obj = sum(Cu*u) + sum(Cd*v) + sum(Cn*x) + sum(Cg*g);
 
-% constraints
+% Constraints over time
 for t = 1:1:T
     % Balance between production and consumption
-    con = [con d(t) == sum(g(:,t)) + r(t)];    
+    con = [con d(t)==sum(g(:,t)) + r(t)];    
     
-%     for i = 1:1:NGen
-%         % Capacity constraints
-%         con = [con 0 <= g(i, t) g(i,t) <= capacity(i).*x(i,t)];
-%         
-%         if(t>1)
-%             % Constraint to be consistent in the state of the generator
-%             con = [con x(i,t-1)-x(i,t)+u(i,t) >= 0 x(i,t)-x(i,t-1)+v(i,t)>= 0];
-%             
-%             if(t<T)
-%                 for tau = t+1:1:min(t+Tup(i), T)
-%                     con = [con x(i,t)-x(i,t-1) <= x(i,tau)];
-%                 end
-%                 
-%                 for tau = t+1:1:min(t+Tdn(i), T)
-%                     con = [con x(i,t-1)-x(i,t) <= 1-x(i,tau)];
-%                 end
-%             end
-%         end      
-%     end
+    for i = 1:1:NGen
+        % Capacity constraints
+        con = [con 0 <= g(i, t) g(i,t) <= capacity(i).*x(i,t)];
+        
+        if(t>1)
+            % Constraint to be consistent in the state of the generator
+            con = [con x(i,t-1)-x(i,t)+u(i,t) >= 0 x(i,t)-x(i,t-1)+v(i,t)>= 0];
+            
+            if(t<T)
+                % Cons. 2f
+                for tau = t+1:1:min(t+Tup(i), T)
+                    con = [con x(i,t)-x(i,t-1) <= x(i,tau)];
+                end
+                
+                % Cons. 2g
+                for tau = t+1:1:min(t+Tdn(i), T)
+                    con = [con x(i,t-1)-x(i,t) <= 1-x(i,tau)];
+                end
+            end
+        end      
+    end
 end
-%% define sdpsetting
-ops=sdpsettings('solver','LPSOLVE', 'debug', 1)
-sol=solvesdp(con,obj,ops)
-solvertime=sol.solvertime
+%% define sdpsetting and solve
+ops=sdpsettings('solver','GLPK', 'debug', 1);
+sol=solvesdp(con,obj,ops);
+solvertime=sol.solvertime;
 
 % obtain the solutions and objective value
+x_opt = value(x);
+u_opt = value(u);
+v_opt = value(v);
+g_opt = value(g);
+
+%% Plot results
+% Plot generation of a choosed generator
+Gen2plot = 2;
+
+figure;
+plot(time, g_opt(Gen2plot, :));
+grid on;
+title(strcat("Generator ", num2str(Gen2plot)));
+xlabel("Time");
+ylabel("Power Generation [MW]");
+
+% Plot total production (generators + renewable) and demand
+figure;
+plot(time, sum(g_opt, 1), time, r', time, d, 'x');
+grid on;
+legend("Generator", "Renewable", "Demand");
+title("Production VS Demand");
+xlabel("Time");
+ylabel("Power [MW]");
+
+
 
