@@ -1,5 +1,5 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% EPFL | MGT-483: Optimal Decision Making | Group Project, Exercise 2.2 %
+% EPFL | MGT-483: Optimal Decision Making | Group Project, Exercise 2.3 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear all; close all; yalmip('clear');clc;
 %% Data
@@ -134,6 +134,7 @@ x_opt = value(x);
 u_opt = value(u);
 v_opt = value(v);
 g_opt = value(g);
+obj_opt = value(obj)
 
 %% Plot results
 % Plot generation of a choosed generator

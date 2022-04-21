@@ -131,6 +131,7 @@ x_opt = value(x);
 u_opt = value(u);
 v_opt = value(v);
 g_opt = value(g);
+obj_opt = value(obj)
 
 %% Plot results
 % Plot generation of a choosed generator
