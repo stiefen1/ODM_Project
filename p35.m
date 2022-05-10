@@ -78,9 +78,11 @@ d=[21.3;21.4;17.8;20.9;15.5;17.6;20.2;23.8;27.7;30.1;35.4;39.4;43.2;47.0;49.3;51
 %% Robust Unit Commitment
 % Hints: define binary variables (vector) in yalmip:  
 % a = binvar(N,M) with dimension N*M 
-
-% three elements
-%variables Initial
+ 
+% Pour chaque timestep pour chaque générateur
+a = sdpvar(T, NGen);
+b = sdpvar(T, NGen);
+c = sdpvar(T, NGen);
 
 con=[];%constraints initial
 obj=0;%objective function initial
