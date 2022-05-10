@@ -121,7 +121,7 @@ figure;
 plot(time, power_production, time, d, 'x', time, S_opt);
 title("Power : production VS demand");
 ylabel("Power [MW]");
-xlabel("Time-step [-]");
+xlabel("Time [h]");
 legend("Production", "Demand", "Battery");
 grid on;
 
@@ -139,5 +139,5 @@ plot(time(2:end), g_der(Gen2check, :), time, R_up(Gen2check)'.*[ones(1, T);-ones
 ylim([-R_up(Gen2check)-1, R_up(Gen2check)+1]);
 title(strcat("Power production of generator ", num2str(Gen2check)));
 ylabel("Power [MW]");
-xlabel("Time-step [-]");
+xlabel("Time [h]");
 grid on;

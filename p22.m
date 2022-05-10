@@ -124,7 +124,7 @@ end
 %% define sdpsetting and solve
 ops=sdpsettings('solver','GLPK', 'debug', 1);
 sol=solvesdp(con,obj,ops);
-solvertime=sol.solvertime;
+solvertime=sol.solvertime
 
 % obtain the solutions and objective value
 x_opt = value(x);
@@ -141,7 +141,7 @@ figure;
 plot(time, g_opt(Gen2plot, :));
 grid on;
 title(strcat("Generator ", num2str(Gen2plot)));
-xlabel("Time");
+xlabel("Time [h]");
 ylabel("Power Generation [MW]");
 
 % Plot total production (generators + renewable) and demand
@@ -150,7 +150,7 @@ plot(time, sum(g_opt, 1), time, r', time, d, 'x');
 grid on;
 legend("Generator", "Renewable", "Demand");
 title("Production VS Demand");
-xlabel("Time");
+xlabel("Time [h]");
 ylabel("Power [MW]");
 
 

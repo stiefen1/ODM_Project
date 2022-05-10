@@ -90,7 +90,7 @@ obj=0;%objective function initial
 % constraints
 
 %% define sdpsetting
-ops=sdpsettings('solver','LPSOLVE');
+ops=sdpsettings('solver','GLPK');
 sol=solvesdp(con,obj,ops);
 
 % obtain the solutions and objective value
