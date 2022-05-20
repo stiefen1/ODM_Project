@@ -1,7 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % EPFL | MGT-483: Optimal Decision Making | Group Project, Exercise 3.5 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-clear all; %close all; 
+clear all; close all; 
 yalmip('clear');clc;
 %% Data
 % The following data is define as a struct for each generator.
@@ -72,7 +72,6 @@ G6.mindown = 2;
 % renewable energy source
 r_bar=[15.2;16.4;16.1;10.9;14.8;7.6;15.6;5.5;9.2;5.7;1.5;12.4;10.4;4.8;14.3;0.5;6.6;5.7;11.5;11.9;2.8;7.3;6.7;9.7];
 r_hat = 0.6*ones(T,1);
-%r_hat = 0.3*ones(T,1);
 capacity = [G1.capacity, G2.capacity, G3.capacity, G4.capacity, G5.capacity, G6.capacity];
 
 % demand
@@ -88,67 +87,60 @@ Tdn = [G1.mindown, G2.mindown, G3.mindown, G4.mindown, G5.mindown, G6.mindown];
 
 %% Robust Unit Commitment
 % Hints: define binary variables (vector) in yalmip:  
-% a = binvar(N,M) with dimension N*M 
 x = binvar(T, NGen, 'full'); % 1 = Gen up, 0 = Gen down
 u = binvar(T, NGen, 'full'); % 1 = Gen turned on, 0 = otherwise
 v = binvar(T, NGen, 'full'); % 1 = Gen turned off, 0 = otherwise
 
-% Pour chaque timestep pour chaque générateur
+% For each time-step and each generator
 a = sdpvar(T, NGen, 'full');
 b = sdpvar(T-1, NGen, 'full');
-%b = zeros(T-1, NGen, 'like', sdpvar);
 c = sdpvar(T, NGen, 'full');
 
 % Dualized problem
 y = sdpvar(2*T, 1);
 z = zeros(T, 1, 'like', sdpvar);
-add_cost = 0; % Cost that is excluded from the r \in R
 
 for t=1:1:T-1
     z(t) = Cg * (a(t, :) + b(t, :))';
-    add_cost = add_cost + Cg * c(t, :)';
 end
 z(T) = Cg * a(T, :)';
 
 w = [r_bar + r_hat; r_bar + r_hat];
 A = [eye(T); -eye(T)]';
 
-% Constraint 3c
-P = sdpvar(4, T-1, NGen);
-Q = sdpvar(4, T-1, NGen);
-
+% Constraint 3c in matrices form
+% t = 1
 P0 = sdpvar(2, NGen);
 Q0 = sdpvar(2, NGen);
+R0 = [r_bar(1) + r_hat(1), r_bar(1) + r_hat(1)];
 
+% t > 1
+P = sdpvar(4, T-1, NGen);
+Q = sdpvar(4, T-1, NGen);
 R = [r_bar(1:end-1) + r_hat(1:end-1), r_bar(1:end-1) + r_hat(1:end-1),...
     r_bar(2:end) + r_hat(2:end), r_bar(2:end) + r_hat(2:end)];
-R0 = [r_bar(1) + r_hat(1), r_bar(1) + r_hat(1)];
 
 C = [1 -1 0 0;...
     0 0 1 -1];
-B = sdpvar(2, T-1, NGen);
 
+B = sdpvar(2, T-1, NGen);
 for i=1:NGen
     B(1, :, i) = b(:, i)';
     B(2, :, i) = a(2:end, i)';
 end
 
+%% Constraints
 
 con=[];%constraints initial
-obj=0;%objective function initial
 
-%% CONSTRAINTS
 % Equilibrium between production and demand
 for t=1:1:T
     % Equilibrium   
-    %con = [con abs(a(t, :)) <= x(t, :)*1e3];
     con = [con sum(a(t, :)) == -1];
     con = [con sum(c(t, :)) == d(t)];
-    %con = [con abs(c(t, :)) <= x(t, :)*1e3];
     
     if t < T
         con = [con sum(b(t, :)) == 0];
-        %con = [con abs(b(t, :)) <= x(t, :)*1e3];
     end
 end
 
@@ -157,7 +149,7 @@ end
 for t = 1:1:T    
     for i = 1:1:NGen
         if(t>1)
-            % Constraint to be consistent in the state of the generator
+            % Cons. 2d & 2e
             con = [con x(t-1, i)-x(t, i)+u(t, i) >= 0 x(t, i)-x(t-1, i)+v(t, i)>= 0];
             
             if(t<T)
@@ -179,7 +171,7 @@ end
 con = [con A*y == z];
 con = [con y >= 0];
 
-% Constraint 3c
+% Cons. 3c
 for i=1:NGen
     % Constraints for t = 0
     con = [con [1 -1]*P0(:, i) == a(1, i)];
@@ -207,24 +199,30 @@ con = [con Q0 <= 0];
 con = [con x(1, 1) == 1];
 
 %% Objective function
+
+obj=0;%objective function initial
+
 for t=1:1:T
     for i=1:1:NGen
         obj = obj + Cu(i) * u(t, i) + Cd(i) * v(t, i) + Cn(i) * x(t, i);
     end
+    obj = obj + Cg * c(t, :)';
 end
 
-obj = obj + w'*y + add_cost;
+obj = obj + w'*y;
 
 %% define sdpsetting
-ops=sdpsettings('solver','MOSEK');%, 'debug', 1);
+ops=sdpsettings('solver','MOSEK');
 sol=solvesdp(con,obj,ops);
 
 % obtain the solutions and objective value
 a_opt = value(a);
 b_opt = value(b);
 c_opt = value(c);
+x_opt = value(x);
+obj_opt = value(obj);
 
-%% Plot results
+%% Simulation
 prod = zeros(T, NGen);
 r = r_bar + 2*(rand(T,1)-0.5).*r_hat; % r varies between r_bar-r_hat and r_bar+r_hat
 for i = 1:1:NGen
@@ -236,6 +234,7 @@ end
 time = [1:1:T];
 prod_tot = sum(prod, 2); % total production at each time-step
 
+%% Plot Equilibrium
 figure;
 plot(time, prod_tot + r, '--r');
 hold on;
@@ -246,9 +245,7 @@ xlabel("Time [h]");
 legend("Production", "Demand");
 grid on;
 
-
 %% Plot generation of a choosed generator
-close gcf
 Gen2plot = 1;
 
 figure;
@@ -261,11 +258,11 @@ xlabel("Time [h]");
 ylabel("Power Generation [MW]");
 ylim([-0.5 capacity(Gen2plot)+0.5]);
 
-%% Plot all the generators
+%% Plot generation of all the generators
 figure;
 
-for i=4:1:6
-    subplot(3, 1, i-3);
+for i=1:1:6
+    subplot(3, 2, i);
     plot(time, prod(:, i));
     hold on;
     yline([0 capacity(i)], '--r');
