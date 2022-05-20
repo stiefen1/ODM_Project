@@ -1,8 +1,9 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% EPFL | MGT-483: Optimal Decision Making | Group Project, Exercise 3.5 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-clear all; close all; 
-yalmip('clear');clc;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% EPFL | MGT-483: Optimal Decision Making | Group Project, Exercise 3.5   %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+% AUTHORS | Bayane Benkhadda, Stephen Monnet, Bilel Hamrouni | 20.05.2022 %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+clear all; close all; yalmip('clear');clc;
 %% Data
 % The following data is define as a struct for each generator.
 % You could define it in your own way if you want, 
@@ -195,9 +196,6 @@ con = [con Q <= 0];
 con = [con P0 <= 0];
 con = [con Q0 <= 0];
 
-% Enforce first generator to be ON at t = 1
-con = [con x(1, 1) == 1];
-
 %% Objective function
 
 obj=0;%objective function initial
@@ -260,9 +258,8 @@ ylim([-0.5 capacity(Gen2plot)+0.5]);
 
 %% Plot generation of all the generators
 figure;
-
-for i=1:1:6
-    subplot(3, 2, i);
+for i=4:1:6
+    subplot(3, 1, i-3);
     plot(time, prod(:, i));
     hold on;
     yline([0 capacity(i)], '--r');

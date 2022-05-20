@@ -1,6 +1,8 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% EPFL | MGT-483: Optimal Decision Making | Group Project, Exercise 1.2 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% EPFL | MGT-483: Optimal Decision Making | Group Project, Exercise 1.2   %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% AUTHORS | Bayane Benkhadda, Stephen Monnet, Bilel Hamrouni | 20.05.2022 %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear all; close all; yalmip('clear');clc;
 %% Data
 % The following data is define as a struct for each generator.
@@ -76,10 +78,7 @@ obj = sum(C*g);
 % constraints
 for t = 1:1:T
     % Balance between production and consumption
-    con = [con d(t) == sum(g(:,t)) + r(t) + bd(t) - bc(t) bd(t) >= 0 bc(t) >= 0];
-    % bd est la puissance déchargée QUI ARRIVE SUR LE RESEAU
-    % bc est la puissance chargée QUI SORT DU RESEAU
-    
+    con = [con d(t) == sum(g(:,t)) + r(t) + bd(t) - bc(t) bd(t) >= 0 bc(t) >= 0];    
     
     for i = 1:1:NGen
         % Capacity constraints
@@ -92,14 +91,12 @@ for t = 1:1:T
     end
     
     if(t>1)
+        % Battery state
         con = [con S(t) == S(t-1) + battery.ec * bc(t-1) - bd(t-1)/battery.ed S(t) <= battery.capacity S(t) >= 0];
-        % La puissance qui sort de la batterie est LA PUISSANCE DEMANDEE PAR LE RESEAU
-        % DIVISEE PAR LE RENDEMENT pour obtenir la bonne puissance dans le réseau
-        % La puissance qui entre dans la batterie est LA PUISSANCE DONNEE PAR LE
-        % RESEAU MULTIPLEE PAR LE RENDEMENT
     end
 end
 
+% Enforce inital and final state of the battery to be 0
 con = [con S(1) == 0 S(T) + battery.ec * bc(T) - bd(T)/battery.ed == 0];
 
 %% define sdpsetting

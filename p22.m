@@ -1,6 +1,8 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% EPFL | MGT-483: Optimal Decision Making | Group Project, Exercise 2.2 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% EPFL | MGT-483: Optimal Decision Making | Group Project, Exercise 2.2   %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% AUTHORS | Bayane Benkhadda, Stephen Monnet, Bilel Hamrouni | 20.05.2022 %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 clear all; close all; yalmip('clear');clc;
 %% Data
 % number of generators
@@ -86,7 +88,7 @@ x0 = [G1.inital, G2.inital, G3.inital, G4.inital, G5.inital, G6.inital]';
 x = binvar(NGen, T); % 1 = Gen up, 0 = Gen down
 u = binvar(NGen, T); % 1 = Gen turned on, 0 = otherwise
 v = binvar(NGen, T); % 1 = Gen turned off, 0 = otherwise
-g = sdpvar(NGen, T);
+g = sdpvar(NGen, T); % Production of each generator at each time-step
 
 % Initial state constraints
 con = [x(:, 1) == x0 u(:, 1) == zeros(NGen, 1) v(:, 1) == zeros(NGen, 1)];
@@ -104,7 +106,7 @@ for t = 1:1:T
         con = [con 0 <= g(i, t) g(i,t) <= capacity(i).*x(i,t)];
         
         if(t>1)
-            % Constraint to be consistent in the state of the generator
+            % Cons 2d & 2e
             con = [con x(i,t-1)-x(i,t)+u(i,t) >= 0 x(i,t)-x(i,t-1)+v(i,t)>= 0];
             
             if(t<T)
@@ -131,7 +133,7 @@ x_opt = value(x);
 u_opt = value(u);
 v_opt = value(v);
 g_opt = value(g);
-obj_opt = value(obj)
+obj_opt = value(obj);
 
 %% Plot results
 % Plot generation of a choosed generator
@@ -152,6 +154,3 @@ legend("Generator", "Renewable", "Demand");
 title("Production VS Demand");
 xlabel("Time [h]");
 ylabel("Power [MW]");
-
-
-
