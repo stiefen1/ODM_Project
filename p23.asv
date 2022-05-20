@@ -1,8 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % EPFL | MGT-483: Optimal Decision Making | Group Project, Exercise 2.3 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-clear all; close all; 
-yalmip('clear');clc;
+clear all; %close all; yalmip('clear');clc;
 %% Data
 % number of generators
 NGen= 6;
@@ -160,8 +159,8 @@ ylabel("Power [MW]");
 %% Plot all the generators
 figure;
 
-for i=1:1:3
-    subplot(3, 1, i);
+for i=4:1:6
+    subplot(3, 1, i-3);
     plot(time, g_opt(i, :));
     hold on;
     yline([0 capacity(i)], '--r');
