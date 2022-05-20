@@ -100,6 +100,8 @@ for t = 1:1:T
     end
 end
 
+con = [con S(1) == 0 S(T) + battery.ec * bc(T) - bd(T)/battery.ed == 0];
+
 %% define sdpsetting
 ops=sdpsettings('solver','LINPROG');
 sol=solvesdp(con,obj,ops);
